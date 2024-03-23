@@ -13,13 +13,17 @@ public class GameManager : MonoBehaviour
             Debug.Log(Input.inputString);
         }
 
-        Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        Ray ray = new Ray(mousePosition,Vector3.forward);
-
-        RaycastHit2D hitInfo = Physics2D.Raycast(ray.origin, ray.direction);
-        if(hitInfo)
+        if (Input.GetMouseButtonDown(0))
         {
+            Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            Ray ray = new Ray(mousePosition,Vector3.forward);
 
+            RaycastHit2D hitInfo = Physics2D.Raycast(ray.origin, ray.direction);
+            if(hitInfo)
+            {
+                Debug.Log(hitInfo.collider.gameObject.name);
+            }
         }
+
     }
 }
