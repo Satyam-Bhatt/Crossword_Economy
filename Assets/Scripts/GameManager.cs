@@ -9,6 +9,7 @@ public class GameManager : MonoBehaviour
 
     [SerializeField] private GameObject letterShow;
     private GameObject letterShow_Container;
+    private GameObject text_Store = null;
     private Canvas canvas;
 
     private void Start()
@@ -23,7 +24,7 @@ public class GameManager : MonoBehaviour
 
         if (Input.anyKeyDown && !Input.GetKeyDown(KeyCode.Mouse0))
         {
-            Debug.Log(Input.inputString);
+            //Debug.Log(Input.inputString);
         }
 
         if (Input.GetMouseButtonDown(0))
@@ -35,14 +36,19 @@ public class GameManager : MonoBehaviour
             if(hitInfo)
             {
                 TMP_InputField text = hitInfo.transform.gameObject.GetComponentInChildren<TMP_InputField>();
+                text_Store = hitInfo.transform.gameObject;
                 if (text != null)
                 {
-                    if (text.text != "")
+                    Debug.Log(text.text.Length);
+                    if (text.text.Length == 1)
                     {
-                        letter_Hold = hitInfo.transform.gameObject.GetComponentInChildren<TMP_Text>().text;
-                        letterShow_Container = Instantiate(letterShow, new Vector2(mousePosition.x, mousePosition.y), Quaternion.identity);
-                        letterShow_Container.transform.SetParent(canvas.transform, false);
-                        letterShow_Container.GetComponent<TMP_Text>().text = letter_Hold;
+                        if (char.IsLetter(text.text[0]))
+                        {
+                            letter_Hold = hitInfo.transform.gameObject.GetComponentInChildren<TMP_Text>().text;
+                            letterShow_Container = Instantiate(letterShow, new Vector2(mousePosition.x, mousePosition.y), Quaternion.identity);
+                            letterShow_Container.transform.SetParent(canvas.transform, false);
+                            letterShow_Container.GetComponent<TMP_Text>().text = letter_Hold;
+                        }
                     }
                 }
                 
@@ -64,15 +70,16 @@ public class GameManager : MonoBehaviour
                 TMP_InputField text = hitInfo.transform.gameObject.GetComponentInChildren<TMP_InputField>();
                 if (text != null)
                 {
-                    if (letter_Hold != null)
+                    if (letter_Hold != null && char.IsLetter(letter_Hold[0]) && text_Store != hitInfo.transform.gameObject)
                     {
                         text.text = letter_Hold;
+
                     }
                 }
-
             }
-            Destroy(letterShow_Container) ;
-            letter_Hold = null;
+            if (letterShow_Container != null)  Destroy(letterShow_Container);
+            if (letter_Hold != null) letter_Hold = null;
+            if(text_Store != null) text_Store = null;
         }
 
     }
