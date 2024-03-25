@@ -39,7 +39,6 @@ public class GameManager : MonoBehaviour
                 text_Store = hitInfo.transform.gameObject;
                 if (text != null)
                 {
-                    Debug.Log(text.text.Length);
                     if (text.text.Length == 1)
                     {
                         if (char.IsLetter(text.text[0]))
