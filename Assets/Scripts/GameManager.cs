@@ -2,19 +2,26 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
     private string letter_Hold;
 
     [SerializeField] private GameObject letterShow;
+    [SerializeField] private TMP_Text resources;
+    [SerializeField] private int resourcesAmount = 0;
+    [SerializeField] private GameObject LooseScreen;
+
     private GameObject letterShow_Container;
     private GameObject text_Store = null;
     private Canvas canvas;
 
     private void Start()
     {
+        LooseScreen.SetActive(false);
         canvas = GameObject.Find("Canvas").GetComponent<Canvas>();
+        resources.text = resourcesAmount.ToString();
     }
 
     // Update is called once per frame
@@ -24,7 +31,16 @@ public class GameManager : MonoBehaviour
 
         if (Input.anyKeyDown && !Input.GetKeyDown(KeyCode.Mouse0))
         {
-            //Debug.Log(Input.inputString);
+            if (char.IsLetter(Input.inputString[0]))
+            {
+                resourcesAmount--;
+                resources.text = resourcesAmount.ToString();
+            }
+        }
+
+        if(resourcesAmount == 0)
+        {
+            LooseScreen.SetActive(true);
         }
 
         if (Input.GetMouseButtonDown(0))
@@ -81,5 +97,10 @@ public class GameManager : MonoBehaviour
             if(text_Store != null) text_Store = null;
         }
 
+    }
+
+    public void Restart()
+    {
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 }
