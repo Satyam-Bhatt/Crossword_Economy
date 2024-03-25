@@ -12,6 +12,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private TMP_Text resources;
     [SerializeField] private int resourcesAmount = 0;
     [SerializeField] private GameObject LooseScreen;
+    [SerializeField] private GameObject WinScreen;
 
     private GameObject letterShow_Container;
     private GameObject text_Store = null;
@@ -20,6 +21,7 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         LooseScreen.SetActive(false);
+        WinScreen.SetActive(false);
         canvas = GameObject.Find("Canvas").GetComponent<Canvas>();
         resources.text = resourcesAmount.ToString();
     }
@@ -29,7 +31,7 @@ public class GameManager : MonoBehaviour
     {
         Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
 
-        if (Input.anyKeyDown && !Input.GetKeyDown(KeyCode.Mouse0))
+        if (Input.anyKeyDown && !Input.GetKeyDown(KeyCode.Mouse0) && !Input.GetKeyDown(KeyCode.Space))
         {
             if (char.IsLetter(Input.inputString[0]))
             {
@@ -38,9 +40,14 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        if(resourcesAmount == 0)
+        if(resourcesAmount < 0)
         {
             LooseScreen.SetActive(true);
+        }
+
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            WinScreen.SetActive(true);
         }
 
         if (Input.GetMouseButtonDown(0))
