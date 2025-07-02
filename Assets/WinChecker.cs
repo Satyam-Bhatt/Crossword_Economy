@@ -1,4 +1,3 @@
-using Microsoft.Unity.VisualStudio.Editor;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -7,7 +6,7 @@ using UnityEngine.UI;
 public class WinChecker : MonoBehaviour
 {
     public UnityEngine.UI.Image[] childImages;
-
+    bool win = false;
     // Start is called before the first frame update
     void Start()
     {
@@ -25,9 +24,18 @@ public class WinChecker : MonoBehaviour
         {
             if (childImages[i].color == Color.green)
             {
-                Debug.Log("You Win!");
-                GameManager.Instance.WinScreen.SetActive(true);
+                win = true;
             }
+            else
+            {
+                win = false;
+                break;
+            }
+        }
+        if (win)
+        {
+            Debug.Log("You Win!");
+            GameManager.Instance.WinScreen.SetActive(true);
         }
     }
 }
