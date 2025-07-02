@@ -40,6 +40,10 @@ public class GameManager : MonoBehaviour
     private GameObject text_Store = null;
     private Canvas canvas;
 
+    // Touch-specific variables
+    private bool isDragging = false;
+    private int activeTouchId = -1;
+
     private void Awake()
     {
         if (_instance == null)
@@ -62,11 +66,9 @@ public class GameManager : MonoBehaviour
         resources.text = resourcesAmount.ToString();
     }
 
-    // Update is called once per frame
     void Update()
     {
-        Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-
+        // Handle keyboard input (unchanged)
         if (Input.anyKeyDown && !Input.GetKeyDown(KeyCode.Mouse0) && !Input.GetKeyDown(KeyCode.Space))
         {
             if (char.IsLetter(Input.inputString[0]))
@@ -76,7 +78,7 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        if(resourcesAmount < 0)
+        if (resourcesAmount < 0)
         {
             LooseScreen.SetActive(true);
         }
@@ -86,61 +88,134 @@ public class GameManager : MonoBehaviour
             WinScreen.SetActive(true);
         }
 
-        if (Input.GetMouseButtonDown(0))
-        {
-            
-            Ray ray = new Ray(mousePosition,Vector3.forward);
+        // Handle touch input
+        HandleTouchInput();
 
-            RaycastHit2D hitInfo = Physics2D.Raycast(ray.origin, ray.direction);
-            if(hitInfo)
+        // Also handle mouse input for testing in editor
+        HandleMouseInput();
+    }
+
+    private void HandleTouchInput()
+    {
+        // Handle touch began
+        if (Input.touchCount > 0)
+        {
+            foreach (Touch touch in Input.touches)
             {
-                TMP_InputField text = hitInfo.transform.gameObject.GetComponentInChildren<TMP_InputField>();
-                text_Store = hitInfo.transform.gameObject;
-                if (text != null)
+                if (touch.phase == TouchPhase.Began && !isDragging)
                 {
-                    if (text.text.Length == 1)
+                    OnTouchBegan(touch.position, touch.fingerId);
+                    break;
+                }
+                else if (touch.phase == TouchPhase.Moved && isDragging && touch.fingerId == activeTouchId)
+                {
+                    OnTouchMoved(touch.position);
+                }
+                else if ((touch.phase == TouchPhase.Ended || touch.phase == TouchPhase.Canceled) && touch.fingerId == activeTouchId)
+                {
+                    OnTouchEnded(touch.position);
+                    break;
+                }
+            }
+        }
+    }
+
+    private void HandleMouseInput()
+    {
+        // Keep mouse input for editor testing
+        Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+
+        if (Input.GetMouseButtonDown(0) && !isDragging)
+        {
+            OnTouchBegan(Input.mousePosition, -1);
+        }
+
+        if (Input.GetMouseButton(0) && isDragging)
+        {
+            OnTouchMoved(Input.mousePosition);
+        }
+
+        if (Input.GetMouseButtonUp(0) && isDragging)
+        {
+            OnTouchEnded(Input.mousePosition);
+        }
+    }
+
+    private void OnTouchBegan(Vector2 screenPosition, int touchId)
+    {
+        Vector3 worldPosition = Camera.main.ScreenToWorldPoint(screenPosition);
+
+        Ray ray = new Ray(worldPosition, Vector3.forward);
+        RaycastHit2D hitInfo = Physics2D.Raycast(ray.origin, ray.direction);
+
+        if (hitInfo)
+        {
+            TMP_InputField text = hitInfo.transform.gameObject.GetComponentInChildren<TMP_InputField>();
+            text_Store = hitInfo.transform.gameObject;
+            if (text != null)
+            {
+                if (text.text.Length == 1)
+                {
+                    if (char.IsLetter(text.text[0]))
                     {
-                        if (char.IsLetter(text.text[0]))
-                        {
-                            letter_Hold = hitInfo.transform.gameObject.GetComponentInChildren<TMP_Text>().text[0];
-                            letterShow_Container = Instantiate(letterShow, new Vector2(mousePosition.x, mousePosition.y), Quaternion.identity);
-                            letterShow_Container.transform.SetParent(canvas.transform, false);
-                            letterShow_Container.GetComponent<TMP_Text>().text = letter_Hold.ToString();
-                        }
+                        letter_Hold = hitInfo.transform.gameObject.GetComponentInChildren<TMP_Text>().text[0];
+                        letterShow_Container = Instantiate(letterShow, new Vector2(worldPosition.x, worldPosition.y), Quaternion.identity);
+                        letterShow_Container.transform.SetParent(canvas.transform, false);
+                        letterShow_Container.GetComponent<TMP_Text>().text = letter_Hold.ToString();
+
+                        isDragging = true;
+                        activeTouchId = touchId;
                     }
                 }
-                
+            }
+        }
+    }
+
+    private void OnTouchMoved(Vector2 screenPosition)
+    {
+        Vector3 worldPosition = Camera.main.ScreenToWorldPoint(screenPosition);
+
+        if (letterShow_Container != null)
+        {
+            // For UI elements, we need to convert screen position to canvas position
+            Vector2 canvasPosition;
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                canvas.transform as RectTransform,
+                screenPosition,
+                canvas.worldCamera,
+                out canvasPosition);
+
+            letterShow_Container.transform.localPosition = canvasPosition;
+        }
+    }
+
+    private void OnTouchEnded(Vector2 screenPosition)
+    {
+        Vector3 worldPosition = Camera.main.ScreenToWorldPoint(screenPosition);
+
+        Ray ray = new Ray(worldPosition, Vector3.forward);
+        RaycastHit2D hitInfo = Physics2D.Raycast(ray.origin, ray.direction);
+
+        if (hitInfo)
+        {
+            TMP_InputField text = hitInfo.transform.gameObject.GetComponentInChildren<TMP_InputField>();
+            if (text != null)
+            {
+                if (letter_Hold != '\0' && char.IsLetter(letter_Hold) && text_Store != hitInfo.transform.gameObject)
+                {
+                    if (hitInfo.transform.GetComponent<Image>().color != Color.green)
+                        text.text = letter_Hold.ToString();
+                }
             }
         }
 
-        if(letterShow_Container != null)
-        {
-            letterShow_Container.transform.position = new Vector2(mousePosition.x, mousePosition.y);
-        }
+        if (letterShow_Container != null) Destroy(letterShow_Container);
 
-        if(Input.GetKeyUp(KeyCode.Mouse0))
-        {
-            Ray ray = new Ray(mousePosition, Vector3.forward);
+        if (letter_Hold != '\0') letter_Hold = '\0';
+        if (text_Store != null) text_Store = null;
 
-            RaycastHit2D hitInfo = Physics2D.Raycast(ray.origin, ray.direction);
-            if (hitInfo)
-            {
-                TMP_InputField text = hitInfo.transform.gameObject.GetComponentInChildren<TMP_InputField>();
-                if (text != null)
-                {
-                    if (letter_Hold != '\0' && char.IsLetter(letter_Hold) && text_Store != hitInfo.transform.gameObject)
-                    {
-                        if(hitInfo.transform.GetComponent<Image>().color != Color.green)
-                            text.text = letter_Hold.ToString();
-                    }
-                }
-            }
-            if (letterShow_Container != null)  Destroy(letterShow_Container);
-
-            if (letter_Hold != '\0') letter_Hold = '\0';
-            if(text_Store != null) text_Store = null;
-        }
-
+        isDragging = false;
+        activeTouchId = -1;
     }
 
     public void Restart()
