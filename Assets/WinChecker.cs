@@ -13,7 +13,7 @@ public class WinChecker : MonoBehaviour
         childImages = new UnityEngine.UI.Image[transform.childCount];
         for (int i = 0; i < transform.childCount; i++)
         {
-            childImages[i] = transform.GetChild(i).GetComponent<UnityEngine.UI.Image>();
+            if(transform.GetChild(i).gameObject.activeSelf) childImages[i] = transform.GetChild(i).GetComponent<UnityEngine.UI.Image>();
         }
     }
 
@@ -22,6 +22,8 @@ public class WinChecker : MonoBehaviour
     {
         for(int i = 0; i < childImages.Length; i++)
         {
+            if(childImages[i] == null) continue;
+
             if (childImages[i].color == Color.green)
             {
                 win = true;

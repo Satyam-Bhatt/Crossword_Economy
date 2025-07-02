@@ -60,9 +60,10 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
+        ShowKeyboard();
         LooseScreen.SetActive(false);
         WinScreen.SetActive(false);
-        canvas = GameObject.Find("Canvas").GetComponent<Canvas>();
+        canvas = GameObject.Find("WorldCanvas").GetComponent<Canvas>();
         resources.text = resourcesAmount.ToString();
     }
 
@@ -216,6 +217,21 @@ public class GameManager : MonoBehaviour
 
         isDragging = false;
         activeTouchId = -1;
+    }
+
+    public void ShowKeyboard()
+    {
+#if UNITY_ANDROID || UNITY_IOS
+        TouchScreenKeyboard.Open("", TouchScreenKeyboardType.Default);
+#endif
+    }
+
+    public void HideKeyboard()
+    {
+#if UNITY_ANDROID || UNITY_IOS
+        if (TouchScreenKeyboard.visible)
+            TouchScreenKeyboard.hideInput = true;
+#endif
     }
 
     public void Restart()
