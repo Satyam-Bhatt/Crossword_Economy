@@ -43,6 +43,7 @@ public class GameManager : MonoBehaviour
     // Touch-specific variables
     private bool isDragging = false;
     private int activeTouchId = -1;
+    private bool fingerDragging = false;
 
     private void Awake()
     {
@@ -60,7 +61,6 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
-        ShowKeyboard();
         LooseScreen.SetActive(false);
         WinScreen.SetActive(false);
         canvas = GameObject.Find("WorldCanvas").GetComponent<Canvas>();
@@ -70,7 +70,7 @@ public class GameManager : MonoBehaviour
     void Update()
     {
         // Handle keyboard input (unchanged)
-        if (Input.anyKeyDown && !Input.GetKeyDown(KeyCode.Mouse0) && !Input.GetKeyDown(KeyCode.Space))
+        if (Input.anyKeyDown && !Input.GetKeyDown(KeyCode.Mouse0) && !Input.GetKeyDown(KeyCode.Space)) // Not working for on screen
         {
             if (char.IsLetter(Input.inputString[0]))
             {
@@ -103,6 +103,21 @@ public class GameManager : MonoBehaviour
         {
             foreach (Touch touch in Input.touches)
             {
+                if (touch.phase == TouchPhase.Ended || touch.phase == TouchPhase.Canceled && touch.fingerId == activeTouchId)
+                {
+                    RestoreKeyboard();
+                    //Debug.Log("ENDED  " + fingerDragging + " " + isDragging);
+                    //if (!fingerDragging && isDragging)
+                    //{
+                    //    ShowKeyboard();
+                    //}
+                    //else if (fingerDragging && isDragging)
+                    //{
+                    //    HideKeyboard();
+                    //}
+                    //fingerDragging = false;
+                }
+
                 if (touch.phase == TouchPhase.Began && !isDragging)
                 {
                     OnTouchBegan(touch.position, touch.fingerId);
@@ -110,6 +125,8 @@ public class GameManager : MonoBehaviour
                 }
                 else if (touch.phase == TouchPhase.Moved && isDragging && touch.fingerId == activeTouchId)
                 {
+                    fingerDragging = true;
+                    HideKeyboard();
                     OnTouchMoved(touch.position);
                 }
                 else if ((touch.phase == TouchPhase.Ended || touch.phase == TouchPhase.Canceled) && touch.fingerId == activeTouchId)
@@ -117,6 +134,8 @@ public class GameManager : MonoBehaviour
                     OnTouchEnded(touch.position);
                     break;
                 }
+
+  
             }
         }
     }
@@ -215,6 +234,11 @@ public class GameManager : MonoBehaviour
         if (letter_Hold != '\0') letter_Hold = '\0';
         if (text_Store != null) text_Store = null;
 
+        if(isDragging)
+        {
+            //StartCoroutine(RestoreKeyboardAfterDelay());
+        }
+
         isDragging = false;
         activeTouchId = -1;
     }
@@ -226,16 +250,74 @@ public class GameManager : MonoBehaviour
 #endif
     }
 
+    private UnityEngine.UI.InputField lastActiveInputField;
+    private TMPro.TMP_InputField lastActiveTMPInputField;
+
     public void HideKeyboard()
     {
-#if UNITY_ANDROID || UNITY_IOS
-        if (TouchScreenKeyboard.visible)
-            TouchScreenKeyboard.hideInput = true;
-#endif
+        // Store reference to currently active field before deactivating
+        var inputFields = FindObjectsOfType<UnityEngine.UI.InputField>();
+        foreach (var field in inputFields)
+        {
+            if (field.isFocused)
+            {
+                lastActiveInputField = field;
+                field.DeactivateInputField();
+            }
+        }
+
+        var tmpInputFields = FindObjectsOfType<TMPro.TMP_InputField>();
+        foreach (var field in tmpInputFields)
+        {
+            if (field.isFocused)
+            {
+                lastActiveTMPInputField = field;
+                field.DeactivateInputField();
+            }
+        }
+
+        UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(null);
+    }
+
+    public void RestoreKeyboard()
+    {
+        if (lastActiveInputField != null)
+        {
+            lastActiveInputField.ActivateInputField();
+            lastActiveInputField = null;
+        }
+
+        if (lastActiveTMPInputField != null)
+        {
+            lastActiveTMPInputField.ActivateInputField();
+            lastActiveTMPInputField = null;
+        }
+    }
+
+    private IEnumerator RestoreKeyboardAfterDelay()
+    {
+        float newTime = Time.time + 5f;
+        while(Time.time < newTime)
+        {
+            HideKeyboard();
+            yield return null;
+        }
+
+        yield return new WaitForEndOfFrame();
+        RestoreKeyboard();
     }
 
     public void Restart()
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
+
+    public void ValueChange()
+    {
+        if(!isDragging)
+        {
+            resourcesAmount--;
+            resources.text = resourcesAmount.ToString();
+        }
     }
 }
