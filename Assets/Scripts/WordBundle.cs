@@ -1,14 +1,12 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using TMPro;
+﻿using TMPro;
+using Unity.Burst.CompilerServices;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 public class WordBundle : MonoBehaviour
 {
     public float length = 5f;
     public Vector2 direction = Vector2.right;
+    public GameManager gameManager;
 
     [Space(10)]
     [Header("Second Word")]
@@ -17,11 +15,20 @@ public class WordBundle : MonoBehaviour
     public float length2 = 0f;
 
     public bool wordComplete { get; private set; } = false;
+    public bool wordComplete2 { get; private set; } = false;
 
-    private void Update()
+    private void Awake()
     {
-        if (wordComplete) return;
+        gameManager = FindObjectOfType<GameManager>();
+    }
 
+    //private void Update()
+    //{
+    //}
+
+    public bool WordCompletionCheck_1(bool isDragging)
+    {
+        bool completeWord = false;
         RaycastHit2D[] hit = Physics2D.RaycastAll(transform.position, direction.normalized, length);
         bool found = true;
         string word = "";
@@ -29,7 +36,7 @@ public class WordBundle : MonoBehaviour
         {
             foreach (RaycastHit2D hitInfo in hit)
             {
-                if(hitInfo.transform.GetComponent<TMP_InputField>() != null)
+                if (hitInfo.transform.GetComponent<TMP_InputField>() != null)
                 {
                     if (hitInfo.transform.GetComponent<TMP_InputField>().text == "")
                     {
@@ -40,12 +47,14 @@ public class WordBundle : MonoBehaviour
                 }
             }
         }
-        if(found)
+        if (found)
         {
-
             if (ReadFromJSON.Instance.commonWordsList.ContainsKey(word.ToUpper()))
             {
                 Debug.Log("Word is valid: " + word);
+
+                if(isDragging) gameManager.UpdateScore(1);
+
                 foreach (RaycastHit2D hitInfo in hit)
                 {
                     if (hitInfo.transform.GetComponent<TMP_InputField>() != null)
@@ -53,67 +62,79 @@ public class WordBundle : MonoBehaviour
                         hitInfo.transform.GetComponent<TMP_InputField>().enabled = false;
                     }
 
-                    if(hitInfo.transform.GetComponent<UnityEngine.UI.Image>() != null)
+                    if (hitInfo.transform.GetComponent<UnityEngine.UI.Image>() != null)
                     {
                         hitInfo.transform.GetComponent<UnityEngine.UI.Image>().color = Color.green;
                     }
                 }
-                if(!secondWord) wordComplete = true;
+
+                ReadFromJSON.Instance.commonWordsList.Remove(word.ToUpper());
+
+                completeWord = true;
             }
             else
             {
-                Debug.Log("Word is not valid: " + word);
+                completeWord = false;
+                //Debug.Log("Word is not valid: " + word);
             }
         }
 
-        if (secondWord)
+        return completeWord;
+
+    }
+
+    public bool WordCompletionCheck_2(bool isDragging)
+    {
+        bool completeWord = false;
+        RaycastHit2D[] hit = Physics2D.RaycastAll(transform.position, direction2.normalized, length2);
+        bool found2 = true;
+        string word2 = "";
+        if (hit != null)
         {
-            hit = Physics2D.RaycastAll(transform.position, direction2.normalized, length2);
-            bool found2 = true;
-            string word2 = "";
-            if (hit != null)
+            foreach (RaycastHit2D hitInfo in hit)
             {
+                if (hitInfo.transform.GetComponent<TMP_InputField>() != null)
+                {
+                    if (hitInfo.transform.GetComponent<TMP_InputField>().text == "")
+                    {
+                        found2 = false;
+                        break;
+                    }
+                    word2 += hitInfo.transform.GetComponent<TMP_InputField>().text[0];
+                }
+            }
+        }
+
+        if (found2)
+        {
+            if (ReadFromJSON.Instance.commonWordsList.ContainsKey(word2.ToUpper()))
+            {
+                Debug.Log("Word 2 is valid: " + word2);
+
+                if (isDragging) gameManager.UpdateScore(1);
+
                 foreach (RaycastHit2D hitInfo in hit)
                 {
                     if (hitInfo.transform.GetComponent<TMP_InputField>() != null)
                     {
-                        if (hitInfo.transform.GetComponent<TMP_InputField>().text == "")
-                        {
-                            found2 = false;
-                            break;
-                        }
-                        word2 += hitInfo.transform.GetComponent<TMP_InputField>().text[0];
+                        hitInfo.transform.GetComponent<TMP_InputField>().enabled = false;
                     }
-                }
-            }
 
-            if (found2)
-            {
-                if (ReadFromJSON.Instance.commonWordsList.ContainsKey(word2.ToUpper()))
-                {
-                    Debug.Log("Word 2 is valid: " + word2);
-                    foreach (RaycastHit2D hitInfo in hit)
+                    if (hitInfo.transform.GetComponent<UnityEngine.UI.Image>() != null)
                     {
-                        if (hitInfo.transform.GetComponent<TMP_InputField>() != null)
-                        {
-                            hitInfo.transform.GetComponent<TMP_InputField>().enabled = false;
-                        }
-
-                        if (hitInfo.transform.GetComponent<UnityEngine.UI.Image>() != null)
-                        {
-                            hitInfo.transform.GetComponent<UnityEngine.UI.Image>().color = Color.green;
-                        }
+                        hitInfo.transform.GetComponent<UnityEngine.UI.Image>().color = Color.green;
                     }
-                    secondWord = false;
                 }
-                else
-                {
-                    Debug.Log("Word 2 is not valid: " + word2);
-                }
+                completeWord = true;
+            }
+            else
+            {
+                completeWord = false;
+                //Debug.Log("Word 2 is not valid: " + word2);
             }
         }
 
-
+        return completeWord;
     }
 
     private void OnDrawGizmos()

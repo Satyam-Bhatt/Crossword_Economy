@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -7,6 +8,13 @@ public class WinChecker : MonoBehaviour
 {
     public UnityEngine.UI.Image[] childImages;
     bool win = false;
+    public GameManager gameManager;
+
+    private void Awake()
+    {
+        gameManager = FindObjectOfType<GameManager>();
+    }
+
     // Start is called before the first frame update
     void Start()
     {
@@ -14,6 +22,12 @@ public class WinChecker : MonoBehaviour
         for (int i = 0; i < transform.childCount; i++)
         {
             if(transform.GetChild(i).gameObject.activeSelf) childImages[i] = transform.GetChild(i).GetComponent<UnityEngine.UI.Image>();
+
+            TMP_InputField inputField = transform.GetChild(i).GetComponent<TMP_InputField>();
+            if(inputField.text != "")
+            {
+                inputField.enabled = false;
+            }
         }
     }
 
@@ -37,7 +51,17 @@ public class WinChecker : MonoBehaviour
         if (win)
         {
             Debug.Log("You Win!");
-            GameManager.Instance.WinScreen.SetActive(true);
+            gameManager.WinScreen.SetActive(true);
+        }
+    }
+
+    public void DisableAllInputFields()
+    {
+        for (int i = 0; i < transform.childCount; i++)
+        {
+            Debug.Log("Call");
+            TMP_InputField inputField = transform.GetChild(i).GetComponent<TMP_InputField>();
+            inputField.enabled = false;
         }
     }
 }

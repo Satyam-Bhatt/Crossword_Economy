@@ -7,33 +7,13 @@ using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
-    private static GameManager _instance;
-
-    public static GameManager Instance
-    {
-        get
-        {
-            if (_instance != null) return _instance;
-
-            _instance = FindObjectOfType<GameManager>();
-
-            if (_instance == null)
-            {
-                GameObject go = new GameObject("GameManager");
-                _instance = go.AddComponent<GameManager>();
-                DontDestroyOnLoad(go);
-            }
-
-            return _instance;
-        }
-    }
-
     private char letter_Hold;
 
     [SerializeField] private GameObject letterShow;
     [SerializeField] private TMP_Text resources;
     [SerializeField] private int resourcesAmount = 0;
     [SerializeField] private GameObject LooseScreen;
+    public WordBundle[] wordBundles;
     public GameObject WinScreen;
 
     private GameObject letterShow_Container;
@@ -45,26 +25,22 @@ public class GameManager : MonoBehaviour
     private int activeTouchId = -1;
     private bool fingerDragging = false;
 
+    public WinChecker winChecker;
+
     private void Awake()
     {
-        if (_instance == null)
-        {
-            _instance = this;
-            DontDestroyOnLoad(gameObject);
-        }
-        else if (_instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
+        winChecker = FindObjectOfType<WinChecker>();
+        wordBundles = FindObjectsOfType<WordBundle>();
     }
 
     private void Start()
     {
+
         LooseScreen.SetActive(false);
         WinScreen.SetActive(false);
         canvas = GameObject.Find("WorldCanvas").GetComponent<Canvas>();
         resources.text = resourcesAmount.ToString();
+
     }
 
     void Update()
@@ -72,17 +48,16 @@ public class GameManager : MonoBehaviour
         // Handle keyboard input (unchanged)
         if (Input.anyKeyDown && !Input.GetKeyDown(KeyCode.Mouse0) && !Input.GetKeyDown(KeyCode.Space)) // Not working for on screen
         {
-            if (char.IsLetter(Input.inputString[0]))
+            if (char.IsLetter(Input.inputString[0]) && resourcesAmount > 0)
             {
-                resourcesAmount--;
-                resources.text = resourcesAmount.ToString();
+                ResourceCalculateAndEffect();
             }
         }
 
-        if (resourcesAmount < 0)
-        {
-            LooseScreen.SetActive(true);
-        }
+        //if (resourcesAmount < 0)
+        //{
+        //    LooseScreen.SetActive(true);
+        //}
 
         if (Input.GetKeyDown(KeyCode.Space))
         {
@@ -170,6 +145,8 @@ public class GameManager : MonoBehaviour
 
         if (hitInfo)
         {
+            if(hitInfo.transform.CompareTag("DefaultLetter")) return;
+
             TMP_InputField text = hitInfo.transform.gameObject.GetComponentInChildren<TMP_InputField>();
             text_Store = hitInfo.transform.gameObject;
             if (text != null)
@@ -309,15 +286,36 @@ public class GameManager : MonoBehaviour
 
     public void Restart()
     {
+        Time.timeScale = 1f;
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
+
+    public void UpdateScore(int num)
+    {
+        resourcesAmount = resourcesAmount + num;
+        resources.text = resourcesAmount.ToString();
     }
 
     public void ValueChange()
     {
-        if(!isDragging)
+        
+        foreach(WordBundle w in wordBundles)
         {
-            resourcesAmount--;
-            resources.text = resourcesAmount.ToString();
+            w.WordCompletionCheck_1(isDragging);
+            w.WordCompletionCheck_2(isDragging);
         }
+
+        if(!isDragging && resourcesAmount > 0)
+        {
+            ResourceCalculateAndEffect();
+        }
+    }
+
+    private void ResourceCalculateAndEffect()
+    {
+        resourcesAmount--;
+        resources.text = resourcesAmount.ToString();
+
+        if (resourcesAmount == 0) winChecker.DisableAllInputFields();
     }
 }

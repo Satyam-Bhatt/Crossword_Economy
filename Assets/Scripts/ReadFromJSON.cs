@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class ReadFromJSON : MonoBehaviour
 {
@@ -51,6 +52,19 @@ public class ReadFromJSON : MonoBehaviour
             Destroy(gameObject);
             return;
         }
+
+
+    }
+
+    private void OnEnable()
+    {
+        SceneManager.sceneLoaded += OnSceneChange;
+
+    }
+
+    private void OnDisable()
+    {
+        SceneManager.sceneLoaded -= OnSceneChange;
     }
 
     private void Start()
@@ -59,9 +73,13 @@ public class ReadFromJSON : MonoBehaviour
 
         foreach (string word in wordData.commonWords)
         {
-            if(word.Length > 1)
+            if (word.Length > 1)
             {
-                commonWordsList.Add(word.ToUpper(), true);
+                string upperWord = word.ToUpper();
+                if (!commonWordsList.ContainsKey(upperWord))
+                {
+                    commonWordsList.Add(upperWord, true);
+                }
             }
         }
     }
@@ -79,5 +97,10 @@ public class ReadFromJSON : MonoBehaviour
                 commonWordsList.Add(word.ToUpper(), true);
             }
         }
+    }
+
+    public void OnSceneChange(Scene scene, LoadSceneMode mode)
+    {
+        WordReload();
     }
 }
