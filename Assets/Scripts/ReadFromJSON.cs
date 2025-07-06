@@ -28,6 +28,7 @@ public class ReadFromJSON : MonoBehaviour
     }
 
     [SerializeField] private TextAsset allWords;
+    public int totalMoves = 0;
     
     public Dictionary<string, bool> commonWordsList = new Dictionary<string, bool>();
 
@@ -101,6 +102,17 @@ public class ReadFromJSON : MonoBehaviour
 
     public void OnSceneChange(Scene scene, LoadSceneMode mode)
     {
+        if (scene.buildIndex == 0)
+        {
+            totalMoves = 1;
+            FindObjectOfType<GameManager>().resourcesAmount = totalMoves;
+        }
+
         WordReload();
+    }
+
+    public void UpdateTotalMoves(int num)
+    {
+        totalMoves = num;
     }
 }

@@ -53,7 +53,7 @@ public class WordBundle : MonoBehaviour
             {
                 Debug.Log("Word is valid: " + word);
 
-                if(isDragging) gameManager.UpdateScore(1);
+                //if(isDragging) gameManager.UpdateScore(1);
 
                 foreach (RaycastHit2D hitInfo in hit)
                 {
@@ -69,6 +69,13 @@ public class WordBundle : MonoBehaviour
                 }
 
                 ReadFromJSON.Instance.commonWordsList.Remove(word.ToUpper());
+
+                foreach (RaycastHit2D hitInfo in hit)
+                {
+                    if(hitInfo.transform.GetComponent<Tutorial>() != null)
+                        hitInfo.transform.GetComponent<Tutorial>().enabled = false;
+                }
+                
 
                 completeWord = true;
             }
@@ -111,7 +118,7 @@ public class WordBundle : MonoBehaviour
             {
                 Debug.Log("Word 2 is valid: " + word2);
 
-                if (isDragging) gameManager.UpdateScore(1);
+                //if (isDragging) gameManager.UpdateScore(1);
 
                 foreach (RaycastHit2D hitInfo in hit)
                 {

@@ -9,6 +9,7 @@ public class WinChecker : MonoBehaviour
     public UnityEngine.UI.Image[] childImages;
     bool win = false;
     public GameManager gameManager;
+    bool levelCompleted = false;
 
     private void Awake()
     {
@@ -34,6 +35,8 @@ public class WinChecker : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if(levelCompleted) return;
+        
         for(int i = 0; i < childImages.Length; i++)
         {
             if(childImages[i] == null) continue;
@@ -51,7 +54,11 @@ public class WinChecker : MonoBehaviour
         if (win)
         {
             Debug.Log("You Win!");
-            gameManager.WinScreen.SetActive(true);
+            gameManager.LevelWin();
+
+            if(FindObjectOfType<Tutorial>() != null) FindObjectOfType<Tutorial>().TutorialPanel.SetActive(false);
+
+            levelCompleted = true;
         }
     }
 
@@ -59,7 +66,7 @@ public class WinChecker : MonoBehaviour
     {
         for (int i = 0; i < transform.childCount; i++)
         {
-            Debug.Log("Call");
+            //Debug.Log("Call");
             TMP_InputField inputField = transform.GetChild(i).GetComponent<TMP_InputField>();
             inputField.enabled = false;
         }

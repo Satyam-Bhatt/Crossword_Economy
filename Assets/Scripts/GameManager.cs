@@ -11,7 +11,8 @@ public class GameManager : MonoBehaviour
 
     [SerializeField] private GameObject letterShow;
     [SerializeField] private TMP_Text resources;
-    [SerializeField] private int resourcesAmount = 0;
+    public int resourcesAmount = 0;
+    [SerializeField] private int winAmount = 0;
     [SerializeField] private GameObject LooseScreen;
     public WordBundle[] wordBundles;
     public GameObject WinScreen;
@@ -35,7 +36,7 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
-
+        resourcesAmount = ReadFromJSON.Instance.totalMoves;
         LooseScreen.SetActive(false);
         WinScreen.SetActive(false);
         canvas = GameObject.Find("WorldCanvas").GetComponent<Canvas>();
@@ -58,11 +59,6 @@ public class GameManager : MonoBehaviour
         //{
         //    LooseScreen.SetActive(true);
         //}
-
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            WinScreen.SetActive(true);
-        }
 
         // Handle touch input
         HandleTouchInput();
@@ -284,10 +280,22 @@ public class GameManager : MonoBehaviour
         RestoreKeyboard();
     }
 
+    public void LevelWin()
+    {
+        WinScreen.SetActive(true);
+        ReadFromJSON.Instance.UpdateTotalMoves(resourcesAmount + winAmount);
+    }
+
     public void Restart()
     {
         Time.timeScale = 1f;
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
+
+    public void NextLevel()
+    {
+        Time.timeScale = 1f;
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
     }
 
     public void UpdateScore(int num)
