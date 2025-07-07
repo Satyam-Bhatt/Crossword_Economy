@@ -12,6 +12,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private GameObject letterShow;
     [SerializeField] private TMP_Text resources;
     public int resourcesAmount = 0;
+    public int points = 0;
     [SerializeField] private int winAmount = 0;
     [SerializeField] private GameObject LooseScreen;
     public WordBundle[] wordBundles;
@@ -20,9 +21,10 @@ public class GameManager : MonoBehaviour
     private GameObject letterShow_Container;
     private GameObject text_Store = null;
     private Canvas canvas;
+    public TMP_Text pointText;
 
     // Touch-specific variables
-    private bool isDragging = false;
+    public bool isDragging = false;
     private int activeTouchId = -1;
     private bool fingerDragging = false;
 
@@ -37,6 +39,14 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         resourcesAmount = ReadFromJSON.Instance.totalMoves;
+
+        if (ReadFromJSON.Instance.storedPoints == 0)
+        {
+            ReadFromJSON.Instance.points = 0;
+        }
+
+        points = ReadFromJSON.Instance.points;
+
         LooseScreen.SetActive(false);
         WinScreen.SetActive(false);
         canvas = GameObject.Find("WorldCanvas").GetComponent<Canvas>();
@@ -48,6 +58,11 @@ public class GameManager : MonoBehaviour
             w.WordCompletionCheck_2(isDragging);
         }
 
+        if(ReadFromJSON.Instance.sceneName != "Level-1" && ReadFromJSON.Instance.sceneName != "Level-2")
+        {
+            pointText = GameObject.Find("Points").transform.GetChild(1).GetComponent<TMP_Text>();
+            pointText.text = points.ToString();
+        }
     }
 
     void Update()
@@ -294,7 +309,14 @@ public class GameManager : MonoBehaviour
         {
             WinScreen.transform.GetChild(1).gameObject.SetActive(false);
             WinScreen.transform.GetChild(0).GetComponent<TMP_Text>().text = "GAME COMPLETE";
+            UpdatePoints(100 * resourcesAmount);
         }
+
+        if (ReadFromJSON.Instance.sceneName != "Level-1" && ReadFromJSON.Instance.sceneName != "Level-2" && ReadFromJSON.Instance.sceneName != "Level-9")
+        {
+            UpdatePoints(50 * resourcesAmount);
+        }
+
         ReadFromJSON.Instance.UpdateTotalMoves(resourcesAmount + winAmount);
         resourcesAmount = ReadFromJSON.Instance.totalMoves;
         resources.text = resourcesAmount.ToString();
@@ -302,6 +324,7 @@ public class GameManager : MonoBehaviour
 
     public void Restart()
     {
+        ReadFromJSON.Instance.points = ReadFromJSON.Instance.storedPoints;
         Time.timeScale = 1f;
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
@@ -309,11 +332,15 @@ public class GameManager : MonoBehaviour
     public void NextLevel()
     {
         Time.timeScale = 1f;
+        ReadFromJSON.Instance.storedPoints = points;
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
     }
 
     public void Replay()
     {
+        ReadFromJSON.Instance.points = 0;
+        ReadFromJSON.Instance.storedPoints = 0;
+        ReadFromJSON.Instance.totalMoves = 1;
         Time.timeScale = 1f;
         SceneManager.LoadScene(0);
     }
@@ -326,7 +353,6 @@ public class GameManager : MonoBehaviour
 
     public void ValueChange()
     {
-        
         foreach(WordBundle w in wordBundles)
         {
             w.WordCompletionCheck_1(isDragging);
@@ -337,6 +363,13 @@ public class GameManager : MonoBehaviour
         {
             ResourceCalculateAndEffect();
         }
+    }
+
+    public void UpdatePoints(int num)
+    {
+        points = points + num;
+        pointText.text = points.ToString();
+        ReadFromJSON.Instance.points = points;
     }
 
     private void ResourceCalculateAndEffect()

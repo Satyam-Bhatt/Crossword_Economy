@@ -29,8 +29,13 @@ public class ReadFromJSON : MonoBehaviour
 
     [SerializeField] private TextAsset allWords;
     public int totalMoves = 0;
+    public int points = 0;
+
+    public int storedPoints = 0;
     
     public Dictionary<string, bool> commonWordsList = new Dictionary<string, bool>();
+
+    public string sceneName;
 
     [System.Serializable]
     public class WordData
@@ -102,6 +107,8 @@ public class ReadFromJSON : MonoBehaviour
 
     public void OnSceneChange(Scene scene, LoadSceneMode mode)
     {
+        sceneName = scene.name;
+
         if (scene.buildIndex == 0)
         {
             totalMoves = 1;

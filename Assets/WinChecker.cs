@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -28,6 +29,12 @@ public class WinChecker : MonoBehaviour
             if(inputField.text != "")
             {
                 inputField.enabled = false;
+            }
+
+            if(transform.GetChild(i).GetComponent<InputFieldData>() != null)
+            {
+                InputFieldData inputFieldData = transform.GetChild(i).GetComponent<InputFieldData>();
+                inputField.onValueChanged.AddListener((value) => inputFieldData.OnValueChange());
             }
         }
     }
