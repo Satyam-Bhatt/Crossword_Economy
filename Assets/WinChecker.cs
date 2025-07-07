@@ -41,7 +41,7 @@ public class WinChecker : MonoBehaviour
         {
             if(childImages[i] == null) continue;
 
-            if (childImages[i].color == Color.green)
+            if (childImages[i].color.g > 0.5f && childImages[i].color.b == 0.0f && childImages[i].color.r == 0.0f)
             {
                 win = true;
             }

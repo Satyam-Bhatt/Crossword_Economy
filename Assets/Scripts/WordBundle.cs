@@ -64,7 +64,8 @@ public class WordBundle : MonoBehaviour
 
                     if (hitInfo.transform.GetComponent<UnityEngine.UI.Image>() != null)
                     {
-                        hitInfo.transform.GetComponent<UnityEngine.UI.Image>().color = Color.green;
+                        Color originalColor = hitInfo.transform.GetComponent<UnityEngine.UI.Image>().color;
+                        hitInfo.transform.GetComponent<UnityEngine.UI.Image>().color = originalColor * Color.green;
                     }
                 }
 
@@ -129,7 +130,8 @@ public class WordBundle : MonoBehaviour
 
                     if (hitInfo.transform.GetComponent<UnityEngine.UI.Image>() != null)
                     {
-                        hitInfo.transform.GetComponent<UnityEngine.UI.Image>().color = Color.green;
+                        Color originalColor = hitInfo.transform.GetComponent<UnityEngine.UI.Image>().color;
+                        hitInfo.transform.GetComponent<UnityEngine.UI.Image>().color = originalColor * Color.green;
                     }
                 }
                 completeWord = true;

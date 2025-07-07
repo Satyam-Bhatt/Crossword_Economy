@@ -42,6 +42,12 @@ public class GameManager : MonoBehaviour
         canvas = GameObject.Find("WorldCanvas").GetComponent<Canvas>();
         resources.text = resourcesAmount.ToString();
 
+        foreach (WordBundle w in wordBundles)
+        {
+            w.WordCompletionCheck_1(isDragging);
+            w.WordCompletionCheck_2(isDragging);
+        }
+
     }
 
     void Update()
@@ -154,7 +160,7 @@ public class GameManager : MonoBehaviour
                         letter_Hold = hitInfo.transform.gameObject.GetComponentInChildren<TMP_Text>().text[0];
                         letterShow_Container = Instantiate(letterShow, new Vector2(worldPosition.x, worldPosition.y), Quaternion.identity);
                         letterShow_Container.transform.SetParent(canvas.transform, false);
-                        letterShow_Container.GetComponent<TMP_Text>().text = letter_Hold.ToString();
+                        letterShow_Container.GetComponent<TMP_Text>().text = letter_Hold.ToString().ToUpper();
 
                         isDragging = true;
                         activeTouchId = touchId;
@@ -283,7 +289,15 @@ public class GameManager : MonoBehaviour
     public void LevelWin()
     {
         WinScreen.SetActive(true);
+        int sceneIndex = SceneManager.GetActiveScene().buildIndex + 1;
+        if (SceneManager.sceneCountInBuildSettings == sceneIndex)
+        {
+            WinScreen.transform.GetChild(1).gameObject.SetActive(false);
+            WinScreen.transform.GetChild(0).GetComponent<TMP_Text>().text = "GAME COMPLETE";
+        }
         ReadFromJSON.Instance.UpdateTotalMoves(resourcesAmount + winAmount);
+        resourcesAmount = ReadFromJSON.Instance.totalMoves;
+        resources.text = resourcesAmount.ToString();
     }
 
     public void Restart()
@@ -296,6 +310,12 @@ public class GameManager : MonoBehaviour
     {
         Time.timeScale = 1f;
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+    }
+
+    public void Replay()
+    {
+        Time.timeScale = 1f;
+        SceneManager.LoadScene(0);
     }
 
     public void UpdateScore(int num)
